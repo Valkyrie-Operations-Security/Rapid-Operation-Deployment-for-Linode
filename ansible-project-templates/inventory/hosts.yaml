@@ -1,0 +1,19 @@
+all:
+  children:
+    redirector:
+      hosts:
+        redirector:
+          ansible_host: <redirect_ip>
+    cobaltstrike:
+      hosts:
+        cobaltstrike:
+          ansible_host: <cobalt_ip>
+    sliver:
+      hosts:
+        sliver:
+          ansible_host: <sliver_ip>
+    pwndrop:
+      hosts:
+        pwndrop:
+          ansible_host: <pwndrop_ip>
+

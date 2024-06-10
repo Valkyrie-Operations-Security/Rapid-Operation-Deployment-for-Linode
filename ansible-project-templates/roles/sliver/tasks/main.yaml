@@ -1,0 +1,3 @@
+---
+- name: Setup Sliver
+  script: "{{ role_path }}/files/installer.sh"

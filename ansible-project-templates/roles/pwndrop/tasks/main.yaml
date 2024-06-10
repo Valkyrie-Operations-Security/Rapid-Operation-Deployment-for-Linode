@@ -1,0 +1,11 @@
+---
+- name: Copy PWNDROP ini
+  copy:
+    src: "{{ role_path }}/files/pwndrop.ini"
+    dest: /tmp/pwndrop.ini
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Setup PwnDrop
+  script: "{{ role_path }}/files/installer.sh"

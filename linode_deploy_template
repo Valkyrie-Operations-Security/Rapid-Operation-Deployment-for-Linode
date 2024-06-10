@@ -1,0 +1,182 @@
+terraform {
+  required_providers {
+    linode = {
+      source  = "linode/linode"
+    }
+  }
+}
+provider "linode" {
+  token = "<insert_token_here>"
+}
+resource "linode_sshkey" "accessKey" {
+  label = "accessKey"
+  ssh_key = chomp(file("./ssh-keys/id_rsa.pub"))
+}
+resource "linode_vpc" "<vpc_name>-vpc" {
+    label = "<vpc_name>-vpc"
+    region = "<node_region>"
+    description = "<vpc_name> VPC."
+}
+resource "linode_vpc_subnet" "<vpc_name>-subnet" {
+    vpc_id = linode_vpc.<vpc_name>-vpc.id
+    label = "<vpc_name>-subnet"
+    ipv4 = "10.0.0.0/24"
+}
+resource "linode_instance" "redirector" {
+  label      = "redirector"
+  image      = "linode/ubuntu24.04"
+  region     = "<node_region>"
+  type       = "g6-dedicated-2"
+  authorized_keys    = [linode_sshkey.accessKey.ssh_key] 
+  root_pass  = "<password>"
+   interface {
+    purpose = "public"
+  }
+
+  interface {
+    purpose   = "vpc"
+    subnet_id = linode_vpc_subnet.<vpc_name>-subnet.id
+    ipv4 {
+      vpc = "10.0.0.2"
+    }
+  }
+}
+
+resource "linode_instance" "cobaltstrike" {
+  label      = "cobaltstrike"
+  image      = "linode/ubuntu24.04"
+  region     = "<node_region>"
+  type       = "g6-dedicated-2"
+  authorized_keys    = [linode_sshkey.accessKey.ssh_key] 
+  root_pass  = "<password>"
+  interface {
+    purpose = "public"
+  }
+
+  interface {
+    purpose   = "vpc"
+    subnet_id = linode_vpc_subnet.<vpc_name>-subnet.id
+    ipv4 {
+      vpc = "10.0.0.3"
+    }
+  }
+
+}
+
+resource "linode_instance" "sliver" {
+  label      = "sliver"
+  image      = "linode/ubuntu24.04"
+  region     = "<node_region>"
+  type       = "g6-dedicated-2"
+  authorized_keys    = [linode_sshkey.accessKey.ssh_key] 
+  root_pass  = "<password>"
+  interface {
+    purpose = "public"
+  }
+
+  interface {
+    purpose   = "vpc"
+    subnet_id = linode_vpc_subnet.<vpc_name>-subnet.id
+    ipv4 {
+      vpc = "10.0.0.4"
+    }
+  }
+
+}
+
+resource "linode_instance" "pwndrop" {
+  label      = "pwndrop"
+  image      = "linode/ubuntu24.04"
+  region     = "<node_region>"
+  type       = "g6-dedicated-2"
+  authorized_keys    = [linode_sshkey.accessKey.ssh_key] 
+  root_pass  = "<password>"
+  interface {
+    purpose = "public"
+  }
+
+  interface {
+    purpose   = "vpc"
+    subnet_id = linode_vpc_subnet.<vpc_name>-subnet.id
+    ipv4 {
+      vpc = "10.0.0.5"
+    }
+  }
+
+}
+resource "linode_firewall" "front-firewall" {
+  label = "front-firewall"
+  inbound_policy = "DROP"
+  outbound_policy = "ACCEPT"
+
+  inbound {
+    label      = "Redirector-Inbound-HTTP"
+    protocol = "TCP"
+    ports = "80"
+    action = "ACCEPT"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+
+  inbound {
+    label      = "Redirector-Inbound-HTTPS"
+    protocol = "TCP"
+    ports = "443"
+    action = "ACCEPT"
+    ipv4     = ["0.0.0.0/0"]
+    ipv6     = ["::/0"]
+  }
+
+  inbound {
+    label      = "Redirector-Inbound-SSH"
+    protocol = "TCP"
+    ports = "22"
+    action = "ACCEPT"
+    ipv4 = ["<op_ip>/32"]
+  }
+    
+  linodes = [linode_instance.redirector.id]
+}
+resource "linode_firewall" "middle-firewall" {
+  label = "middle-firewall"
+  inbound_policy = "DROP"
+  outbound_policy = "ACCEPT"
+
+  inbound {
+    label      = "Teamserver-Inbound-HTTP"
+    protocol = "TCP"
+    ports = "80"
+    action = "ACCEPT"
+    ipv4 = ["${linode_instance.redirector.interface[1].ipv4[0].vpc}/32"]
+  }
+
+  inbound {
+    label      = "Teamserver-Inbound-HTTPS"
+    protocol = "TCP"
+    ports = "443"
+    action = "ACCEPT"
+    ipv4 = ["${linode_instance.redirector.interface[1].ipv4[0].vpc}/32"]
+  }
+
+  inbound {
+    label      = "Teamserver-Inbound-SSH"
+    protocol = "TCP"
+    ports = "22"
+    action = "ACCEPT"
+    ipv4 = ["${linode_instance.redirector.interface[1].ipv4[0].vpc}/32"]
+  }
+  
+  inbound {
+    label      = "Operator-Inbound-SSH"
+    protocol = "TCP"
+    ports = "22"
+    action = "ACCEPT"
+    ipv4 = ["<op_ip>/32"]
+  }
+
+   linodes = [
+    linode_instance.cobaltstrike.id,
+    linode_instance.sliver.id,
+    linode_instance.pwndrop.id
+  ]
+}

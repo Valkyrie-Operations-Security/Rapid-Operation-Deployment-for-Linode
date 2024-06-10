@@ -1,0 +1,10 @@
+---
+- name: Copy cobaltstrike zip
+  copy:
+    src: "{{ role_path }}/files/cobaltstrike-dist.tgz"
+    dest: /opt/cobaltstrike-dist.tgz
+    owner: root
+    group: root
+    mode: '0644'
+- name: Setup CobaltStrike
+  script: "{{ role_path }}/files/installer.sh"

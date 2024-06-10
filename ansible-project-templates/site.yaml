@@ -1,0 +1,26 @@
+- hosts: redirector
+  become: yes
+  vars:
+    ansible_ssh_common_args: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no -vvv'
+  roles:
+    - redirector
+- hosts: cobaltstrike
+  become: yes
+  vars:
+    ansible_ssh_common_args: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no -vvv'
+  roles:
+    - cobaltstrike
+- hosts: sliver
+  become: yes
+  vars:
+    ansible_ssh_common_args: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no -vvv'
+  roles:
+    - sliver
+- hosts: pwndrop
+  become: yes
+  vars:
+    ansible_ssh_common_args: '-o ConnectTimeout=30 -o StrictHostKeyChecking=no -vvv'
+  roles:
+    - pwndrop
+
+
