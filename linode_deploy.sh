@@ -191,13 +191,13 @@ sed -i "s/<node_region>/$region_id/g" linode_teamserver_deploy.tf
 sed -i "s/<cobalt_license>/$COBALT_LICENSE/g" ansible-project/roles/cobaltstrike/files/installer.sh
 
 # Replace pwndrop admin password in the installer script
-sed -i "s/<pwn_password>/$PWN_PASS/g" ansible-project/roles/pwndrop/files/installer.sh
+sed -i "s/<pwn_password>/$PWN_PASS/g" ansible-project/roles/pwndrop/files/pwndrop.ini
 
 # Replace pwndrop admin in the installer script
-sed -i "s/<pwn_admin>/$PWN_ADMIN/g" ansible-project/roles/pwndrop/files/installer.sh
+sed -i "s/<pwn_admin>/$PWN_ADMIN/g" ansible-project/roles/pwndrop/files/pwndrop.ini
 
 # Replace pwndrop directory in the installer script
-sed -i "s/<pwn_path>/$PWN_DIR/g" ansible-project/roles/pwndrop/files/installer.sh
+sed -i "s/<pwn_path>/$PWN_DIR/g" ansible-project/roles/pwndrop/files/pwndrop.ini
 
 # Check for cobaltstrike tar file
 echo "Checking for password protected cobaltstrike.tgz in: ansible-project/roles/cobaltstrike/files/"
